@@ -1,0 +1,41 @@
+version: 0.1
+stack:
+  name: {{ .Env.CLUSTER_FULL_NAME }} # Note: Update this with your stack name
+  template:
+    file: eks_cluster.template.yaml
+    bucket: {{ .Env.CFN_ARTIFACT_BUCKET_NAME }} # Note: Update this with your bucket name.  Stacks are uploaded here prior to deployment.'
+
+#
+# Reference parent stacks fo included shared information like stack name.
+#
+#  parents:
+#    base: '../base'
+
+#
+# Define stack input parameters.
+#
+
+#
+# Define stack capabilities required.
+#
+  capabilities:
+    - 'CAPABILITY_IAM'
+
+#
+# Define global tags.
+#
+  tags:
+    "gitlabci:repo": 'infra-aws-eks'
+    "gitlabci:app": 'cim-stack'
+    "gitlabci:runner": {{ .Env.WHOAMI }}
+
+
+stage:
+  {{ .Env.STAGE }}:
+    stack:
+      name: {{ .Env.CLUSTER_FULL_NAME }}
+      parameters:
+        VPCID: {{ .Env.VPC_ID }} # which vpc to deploy to
+        SubnetIds: '{{ .Env.SUBNET_IDS }}' # which subnets to deploy to
+      template:
+        bucket: {{ .Env.CFN_ARTIFACT_BUCKET_NAME }} # Note: Update this with your bucket name.  Stacks are uploaded here prior to deployment.'

@@ -1,0 +1,58 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Create EKS cluster additional resources'
+
+Parameters:
+  
+  AwsAccountAlias:
+    Type: String
+    Description: AWS Account alias
+
+Resources:
+
+  #
+  # IAM Role needed by the cluster
+  #
+  K8sAdminRole:
+    Description: Admin role that maps to k8s system admin.
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+            Effect: Allow
+            Principal:
+              AWS:
+                - "arn:aws:iam::1234567890:root"
+                - !Join # generic admin role
+                    - ''
+                    - - "arn:aws:iam::"
+                      - !Ref AWS::AccountId
+                      - ":role/scope-role/"
+                      - !Ref AwsAccountAlias
+                      - "-simplego-administrator"
+                - !Join # organizatoin service role
+                    - ''
+                    - - "arn:aws:iam::"
+                      - !Ref AWS::AccountId
+                      - ":role/PipelineRole"
+
+            Action: sts:AssumeRole
+      ManagedPolicyArns: 
+        - arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy
+        - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+        - arn:aws:iam::aws:policy/AmazonEC2FullAccess
+        - arn:aws:iam::aws:policy/ElasticLoadBalancingFullAccess
+        - arn:aws:iam::aws:policy/AWSWAFFullAccess
+        - arn:aws:iam::aws:policy/ResourceGroupsandTagEditorFullAccess
+        - arn:aws:iam::aws:policy/AmazonEKSClusterPolicy
+        - arn:aws:iam::aws:policy/AmazonEKSServicePolicy
+
+Outputs:
+  K8sAdminRoleArn:
+    Value: !GetAtt K8sAdminRole.Arn
+    Description: Kubernetes Admin Role Arn
+    Export:
+      Name:
+        Fn::Sub: "${AWS::StackName}-K8sAdminRoleArn"

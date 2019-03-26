@@ -1,0 +1,3 @@
+# all dockerized generated files will be with ".yml" postfix. we ignore.
+# if you need to put yaml conf files that don't pass dockerize, and need to be preserved by git, use ".yaml" as postfix
+*.yml

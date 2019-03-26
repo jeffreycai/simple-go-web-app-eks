@@ -1,0 +1,53 @@
+version: 0.1
+stack:
+  name: {{ .Env.AWS_ACCOUNT_ALIAS }}-gitlabci-eks-{{ .Env.CLUSTER_NAME }}-nodegroup # Note: Update this with your stack name
+  template:
+    file: eks_nodegroup.template.yaml
+    bucket: {{ .Env.CFN_ARTIFACT_BUCKET_NAME }} # Note: Update this with your bucket name.  Stacks are uploaded here prior to deployment.'
+
+#
+# Reference parent stacks fo included shared information like stack name.
+#
+#  parents:
+#    base: '../base'
+
+#
+# Define stack input parameters.
+#
+
+#
+# Define stack capabilities required.
+#
+  capabilities:
+    - 'CAPABILITY_IAM'
+
+#
+# Define global tags.
+#
+  tags:
+    "gitlabci:repo": 'infra-aws-eks'
+    "gitlabci:app": 'cim-stack'
+    "gitlabci:runner": {{ .Env.WHOAMI }}
+
+
+stage:
+  {{ .Env.STAGE }}:
+    stack:
+      name: {{ .Env.AWS_ACCOUNT_ALIAS }}-gitlabci-eks-{{ .Env.CLUSTER_NAME }}-nodegroup-{{ .Env.STAGE }}
+      parameters:
+        KeyName: {{ .Env.CLUSTER_NODE_KEY_NAME }}
+        NodeImageId: {{ .Env.CLUSTER_NODE_AMI }} # Kubernetes version 1.11, ap-southeast-2 region, Amazon EKS-optimized AMI
+        NodeInstanceType: {{ .Env.CLUSTER_NODE_INSTANCE_TYPE }}
+        NodeAutoScalingGroupMinSize: "{{ .Env.CLUSTER_NODE_ASG_MIN_SIZE }}"
+        NodeAutoScalingGroupMaxSize: "{{ .Env.CLUSTER_NODE_ASG_MAX_SIZE }}"
+        NodeAutoScalingGroupDesiredCapacity: "{{ .Env.CLUSTER_NODE_DES_CAP }}"
+        NodeVolumeSize: "{{ .Env.CLUSTER_NODE_VOL_SIZE }}"
+        ClusterName: "{{ .Env.CLUSTER_FULL_NAME }}"
+        BootstrapArguments: ""
+        NodeGroupName: "eks-cluster-{{ .Env.CLUSTER_NAME }}-{{ .Env.STAGE }}-nodegroup"
+        ClusterControlPlaneSecurityGroup: "{{ .Env.CLUSTER_CTL_SG }}"
+        VpcId: "{{ .Env.VPC_ID }}"
+        Subnets: "{{ .Env.CLUSTER_NODE_SUBNETS }}"
+
+      template:
+        bucket: {{ .Env.CFN_ARTIFACT_BUCKET_NAME }} # Note: Update this with your bucket name.  Stacks are uploaded here prior to deployment.'

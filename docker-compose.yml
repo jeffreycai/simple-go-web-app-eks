@@ -1,0 +1,12 @@
+version: '3.6'
+
+services:
+  aws:
+    image: snsw01-aws-docker.jfrog.io/3musketeers
+    env_file: .env
+    working_dir: /opt/app
+    volumes:
+      - .:/opt/app
+      - ~/.ssh:/root/.ssh:ro
+      - ~/.aws:/root/.aws:ro
+    network_mode: "bridge"

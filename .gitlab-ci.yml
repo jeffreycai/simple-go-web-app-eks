@@ -1,0 +1,66 @@
+image: flemay/musketeers
+
+# overlay2 provides improved performance for dind
+variables:
+  DOCKER_DRIVER: overlay2
+
+services:
+  - docker:dind
+
+stages:
+  - input_var_check
+  - is_it_my_turn
+  - stack-up
+
+########################
+# Stage: env_var_check
+########################
+input_var_check:
+  stage: input_var_check
+  script:
+    - bash make/input_var_check.sh
+  only:
+    - /^release$/
+
+########################
+# Stage: is_it_my_turn
+########################
+.is_it_my_turn_template: &is_it_my_turn-definition
+  stage: is_it_my_turn
+  script:
+    - make is_it_my_turn
+  allow_failure: true
+  artifacts:
+    paths:
+      - stage_output.*
+    name: "$CI_JOB_NAME-$CI_COMMIT_REF_NAME"
+    expire_in: 1 day
+  only:
+    - /^release$/
+
+# simple-go-web-app
+simple-go-web-app-is_it_my_turn:
+  <<: *is_it_my_turn-definition
+  variables:
+    AWS_ACCOUNT_ID: "111111"
+  tags:
+    - simple-go-web-app-runner
+
+########################
+# Stage: stack-up
+########################
+.stack-up_template: &stack_up-definition
+  stage: stack-up
+  script:
+    - make stack-up
+  # only allows job to run when it is `release` branch
+  only:
+    - /^release$/
+
+# simple-go-web-app
+simple-go-web-app_stack-up:
+  <<: *stack_up-definition
+  variables:
+    AWS_ACCOUNT_ID: "111111"
+  tags:
+    - simple-go-web-app-runner
